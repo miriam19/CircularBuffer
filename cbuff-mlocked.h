@@ -10,13 +10,12 @@ public:
    int capacity;
    static CQueue *_cbInstance;
    mutex _cvlck;
-   condition_variable _cv;
+   condition_variable _cvc;
+   condition_variable _cvp;
 private:
    int *_arr;
    int _head; int _tail; int _size;
    mutex _mlck;
-   //mutex _cvlck;
-   //condition_variable _cv;
 
    CQueue(int cap)
       : capacity(cap){
