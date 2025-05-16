@@ -20,17 +20,10 @@ CQueue::printQueue() {
       cout << "-------------------------------------------" << endl;
       return;
    }
-   if (_head <= _tail) {
-      for (int i=_head; i<=_tail;i++) {
-        cout << _arr[i] << " ";
-      }
-   } else {
-     for (int i=_head; i<capacity;i++) {
-        cout << _arr[i] << " ";
-     }
-     for (int i=0; i<_tail;i++) {
-        cout << _arr[i] << " ";
-     }
+   int index = _head;
+   for (int i=0; i < _size; i++) {
+      cout << _arr[index] << " ";
+      index = (index+1)%capacity;
    }
    cout << endl;
    cout << "-------------------------------------------" << endl;
@@ -74,7 +67,7 @@ void Producer() {
    CQueue *_cBuff = CQueue::GetInstance();
    int input;
    while(true) {
-      unique_lock plck(_cBuff->_cvlck);
+      unique_lock<mutex> plck(_cBuff->_cvlck);
       _cBuff->_cvp.wait(plck, [&_cBuff](){
                       cout << "Inside producer lambda isfull " << _cBuff->isFull() << endl;
                       return !_cBuff->isFull(); });
@@ -89,7 +82,7 @@ void Consumer() {
    CQueue *_cBuff = CQueue::GetInstance();
    int val;
    while(true) {
-      unique_lock plck(_cBuff->_cvlck);
+      unique_lock<mutex> plck(_cBuff->_cvlck);
       _cBuff->_cvc.wait(plck, [&_cBuff](){
                       cout << "Inside consumer lambda isempty " << _cBuff->isEmpty() << endl;
                       return !_cBuff->isEmpty(); });
