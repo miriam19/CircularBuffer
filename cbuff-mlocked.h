@@ -15,7 +15,6 @@ public:
 private:
    int *_arr;
    int _head; int _tail; int _size;
-   mutex _mlck;
 
    CQueue(int cap)
       : capacity(cap){

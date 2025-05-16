@@ -1,6 +1,8 @@
 // Circular Buffer. 
 // Producer enqueues twice the input.
 
+// Fixes after review from Chat-GPT
+
 #include "cbuff-mlocked.h"
 #include <thread>
 #include <mutex>
@@ -11,7 +13,6 @@ CQueue* CQueue::_cbInstance = nullptr;
 void
 CQueue::printQueue() {
    cout << "-----------PRINT QUEUE-------- " << endl ;
-   lock_guard<mutex> lock(_mlck);
    cout << "head " << _head << endl;
    cout << "tail " << _tail << endl;
    if (_size == 0) {
@@ -37,7 +38,6 @@ CQueue::printQueue() {
 
 bool
 CQueue::isFull() {
-   lock_guard<mutex> lock(_mlck);
    if (_size == capacity) {
       return true;
    }
@@ -46,7 +46,6 @@ CQueue::isFull() {
 
 bool
 CQueue::isEmpty() {
-   lock_guard<mutex> lock(_mlck);
    if (_size == 0) {
       return true;
    }
@@ -55,7 +54,6 @@ CQueue::isEmpty() {
 
 int
 CQueue::dequeue() {
-   lock_guard<mutex> lock(_mlck);
    int val = _arr[_head];
    _head = (_head+1)%capacity;
 
@@ -65,7 +63,6 @@ CQueue::dequeue() {
 
 bool
 CQueue::enqueue(int num) {
-   lock_guard<mutex> lock(_mlck);
    _tail = (_head+_size)%capacity;
    _arr[_tail] = num;
    _size += 1;
@@ -81,12 +78,10 @@ void Producer() {
       _cBuff->_cvp.wait(plck, [&_cBuff](){
                       cout << "Inside producer lambda isfull " << _cBuff->isFull() << endl;
                       return !_cBuff->isFull(); });
-      if (!_cBuff->isFull()) {
-         cin >> input;
-         _cBuff->enqueue(2*input);
-         _cBuff->printQueue();
-         _cBuff->_cvc.notify_one();
-      }
+      cin >> input;
+      _cBuff->enqueue(2*input);
+      _cBuff->printQueue();
+      _cBuff->_cvc.notify_one();
    }
 }
 
@@ -98,14 +93,12 @@ void Consumer() {
       _cBuff->_cvc.wait(plck, [&_cBuff](){
                       cout << "Inside consumer lambda isempty " << _cBuff->isEmpty() << endl;
                       return !_cBuff->isEmpty(); });
-      if (!_cBuff->isEmpty()) {
-         while (!_cBuff->isEmpty()) {
-            val = _cBuff->dequeue();
-            cout << "Dequeud val: " << val << endl;
-         }
-         _cBuff->printQueue();
-         _cBuff->_cvp.notify_one();
+      while (!_cBuff->isEmpty()) {
+         val = _cBuff->dequeue();
+         cout << "Dequeud val: " << val << endl;
       }
+      _cBuff->printQueue();
+      _cBuff->_cvp.notify_one();
    }
 }
 
